@@ -1,0 +1,7 @@
+Review solve_for_paths functions in helper to
+- Omit 0 rescure resource and 0 victim need
+- Omit the paths that can go to
+
+implement feature: when a rescure team reach a destination, 
+find the corresponding victim and reduce the need and the 
+resource to update online.

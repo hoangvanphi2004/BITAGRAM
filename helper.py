@@ -28,12 +28,13 @@ def a_aristek(image, start, finish, heuristic_func):
         start: (x, y)
         finish: (x, y)
     """
-    image = np.array(image);
+    image = np.array(image);  
 
     recent = start
     recent_cost = 0
     potential_nodes = []
     previous_move = [[None for i in range(image.shape[1])] for i in range(image.shape[0])]
+    print(image.shape)
     visited = np.full(image.shape, False)
 
     def valid_move(position):
@@ -85,6 +86,163 @@ def a_aristek(image, start, finish, heuristic_func):
 
     return recent_cost, path, visited;
 
+def theta_aristek(image, start, finish, heuristic):
+    parent = np.array([[None for i in range(image.shape[1])] for i in range(image.shape[0])])
+    gScore = np.array([[1e9 for i in range(image.shape[1])] for i in range(image.shape[0])])
+    
+    class custom_heap:
+        def __init__(self):
+            self.list = []
+        def __contains__(self, item):
+            return (item in self.list)
+        def pop(self):
+            return heapq.heappop(self.list)[1]
+        def insert(self, node, distance):
+            heapq.heappush(self.list, (distance, node))
+        def empty(self):
+            return (len(self.list) == 0)
+    
+    open = custom_heap()
+
+    def c(p1, p2):
+        return np.sqrt((p1[0] - p2[0]) ** 2 + (p1[1] - p2[1]) ** 2)
+
+    def main(start, goal):
+        # This main loop is the same as A*
+        gScore[start] = 0
+        parent[start] = start
+        # Initializing open and closed sets. The open set is initialized 
+        # with the start node and an initial cost
+        
+        open.insert(start, gScore[start] + heuristic(start, goal))
+        # gScore[node] is the current shortest distance from the start node to node
+        # heuristic(node) is the estimated distance of node from the goal node
+        # there are many options for the heuristic such as Euclidean or Manhattan 
+
+        def valid_move(position):
+            for i in range(2):
+                if position[i] >= image.shape[i] or position[i] < 0:
+                    return False;
+
+            if image[position] == WALL or visited[position] == True:
+                return False;
+            return True
+
+        visited = np.full(image.shape, False)
+        visited[start] = True
+        while open.empty() == False:
+            s = open.pop()
+            if s == goal:
+                return gScore[s], reconstruct_path(s)
+            visited[s] = True
+            next_moves = [
+                (s[0], s[1] + 1),
+                (s[0] + 1, s[1]),
+                (s[0], s[1] - 1),
+                (s[0] - 1, s[1])
+            ]
+
+            for neighbor in next_moves:
+                if valid_move(neighbor):
+                    if visited[neighbor] == False:
+                        update_vertex(s, neighbor, goal)
+        return -1, None
+                
+        
+    def update_vertex(s, neighbor, goal):
+        # This part of the algorithm is the main difference between A* and Theta*
+        if line_of_sight(parent[s], neighbor):
+            # If there is line-of-sight between parent[s] and neighbor
+            # then ignore s and use the path from parent[s] to neighbor 
+            if gScore[parent[s]] + c(parent[s], neighbor) < gScore[neighbor]:
+                # c(s, neighbor) is the Euclidean distance from s to neighbor
+                gScore[neighbor] = gScore[parent[s]] + c(parent[s], neighbor)
+                parent[neighbor] = parent[s]
+                open.insert(neighbor, gScore[neighbor] + heuristic(neighbor, goal))
+        else:
+            # If the length of the path from start to s and from s to 
+            # neighbor is shorter than the shortest currently known distance
+            # from start to neighbor, then update node with the new distance
+            if gScore[s] + c(s, neighbor) < gScore[neighbor]:
+                gScore[neighbor] = gScore[s] + c(s, neighbor)
+                parent[neighbor] = s
+                open.insert(neighbor, gScore[neighbor] + heuristic(neighbor, goal))
+        
+    def reconstruct_path(s):
+        total_path = [s]
+        # This will recursively reconstruct the path from the goal node 
+        # until the start node is reached
+        if parent[s] != s:
+            total_path = reconstruct_path(parent[s]) + total_path
+        return total_path
+        
+    def line_of_sight(node1, node2):
+        x0 = node1[0];
+        y0 = node1[1];
+        x1 = node2[0];
+        y1 = node2[1];
+        dx = abs(x1 - x0);
+        dy = -abs(y1 - y0);
+
+        sX = -1;
+        sY = -1;
+        if(x0 < x1):
+            sX = 1;
+
+        if(y0 < y1):
+            sY = 1;
+
+
+        e = dx + dy;
+        while(True):
+            point = (int(x0), int(y0));
+            if(image[point] == WALL):
+                return False;
+
+            if(x0 == x1 and y0 == y1):
+                return True;
+
+            e2 = 2 * e;
+            if(e2 >= dy):
+                if(x0 == x1):
+                    return True;
+                e += dy;
+                x0 += sX;
+
+            if(e2 <= dx):
+                if(y0 == y1):
+                    return True;
+                e += dx;
+                y0 += sY;
+    cost, path = main(start=start, goal=finish)
+    real_paths = []
+    def draw_bigger(first_axis, second_axis, swap = False):
+        # first_axis always longer than second axis
+        line_path = []
+        for x in range(first_axis[0], first_axis[1], 1 if first_axis[0] < first_axis[1] else -1):
+            y = int(second_axis[0] + (x - first_axis[0]) / (first_axis[1] - first_axis[0]) * (second_axis[1] - second_axis[0]))
+            if swap:
+                line_path.append((y, x));
+            else:
+                line_path.append((x, y));
+
+        return line_path
+    def line(p1, p2):
+        if(abs(p1[0] - p2[0]) > abs(p1[1] - p2[1])):
+            return draw_bigger((p1[0], p2[0]), (p1[1], p2[1]), swap = False);
+        else:
+            return draw_bigger((p1[1], p2[1]), (p1[0], p2[0]), swap = True);
+            
+    for index in range(len(path) - 1):
+        pre_point = path[index]
+        nex_point = path[index + 1]
+        # print("!!!")
+        # print(pre_point, nex_point)
+        # print(line(pre_point, nex_point))
+        real_paths = real_paths + line(pre_point, nex_point)
+    real_paths.append(path[index + 1])
+    return cost, real_paths, None
+
 def buildMap(image):
   # Step 1: Gaussian Blurring
   blurred_image = cv2.GaussianBlur(image, (5, 5), 0)
@@ -106,14 +264,19 @@ def buildMap(image):
   return groundMapModel
 
 def solve_for_paths(image, rescue_pos, victim_pos, fatals, rescue_resources, victim_needs):
+    rescue_pos = [tuple(single_rescue_pos) for single_rescue_pos in rescue_pos]
+    victim_pos = [tuple(single_victim_pos) for single_victim_pos in victim_pos]
     num_of_rescue_teams = len(rescue_pos);
     num_of_victims = len(victim_pos)
     costs_matrix = np.zeros((num_of_rescue_teams, num_of_victims))
-    paths_matrix = [[None for i in range(num_of_rescue_teams)] for i in range(num_of_victims)]
+    paths_matrix = [[None for i in range(num_of_victims)] for i in range(num_of_rescue_teams)]
+
     for i in range(len(rescue_pos)):
         for j in range(len(victim_pos)):
-            costs_matrix[i, j], paths_matrix[i][j], _ = a_aristek(image, rescue_pos[i], victim_pos[j], L1)
+            #costs_matrix[i, j], paths_matrix[i][j], _ = a_aristek(image, rescue_pos[i], victim_pos[j], L1)
+            costs_matrix[i, j], paths_matrix[i][j], _ = theta_aristek(image, rescue_pos[i], victim_pos[j], L1)
 
+    #print(costs_matrix, paths_matrix)
     rescue_remain = [True for i in range(num_of_rescue_teams)]
     rescue_paths = [None for i in range(num_of_rescue_teams)]
     rescue_order = np.argsort(fatals)[::-1]
