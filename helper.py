@@ -297,3 +297,14 @@ def solve_for_paths(image, rescue_pos, victim_pos, fatals, rescue_resources, vic
                     break;
 
     return rescue_paths
+
+def paths_for_return(image, rescue_pos, assembly_area):
+    rescue_pos = [tuple(single_rescue_pos) for single_rescue_pos in rescue_pos]
+    assembly_area = [tuple(assembly_area[0])]
+    num_of_rescue_teams = len(rescue_pos);
+    paths_matrix = [None for i in range(num_of_rescue_teams)]
+
+    for i in range(len(rescue_pos)):
+        _, paths_matrix[i], __ = theta_aristek(image, rescue_pos[i], assembly_area[0], L1)
+
+    return paths_matrix
