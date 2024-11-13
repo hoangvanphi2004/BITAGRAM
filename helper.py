@@ -240,7 +240,7 @@ def theta_aristek(image, start, finish, heuristic):
         # print(pre_point, nex_point)
         # print(line(pre_point, nex_point))
         real_paths = real_paths + line(pre_point, nex_point)
-    real_paths.append(path[index + 1])
+    real_paths.append(path[len(path) - 1])
     return cost, real_paths, None
 
 def buildMap(image):

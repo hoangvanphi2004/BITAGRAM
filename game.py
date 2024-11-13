@@ -30,12 +30,12 @@ WIDTH, HEIGHT = 640, 480
 # victim_needs = [4]
 
 class Gui():
-    def __init__(self):
+    def __init__(self, image_link, victim_position, fatals, victim_needs, rescue_position, rescue_resources):
         self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
         pygame.display.set_caption("Visualize");
 
         # Load background
-        self.background = numpy.array(Image.open("test.jpg"));
+        self.background = numpy.array(Image.open(image_link));
         self.background = cv2.resize(self.background, (WIDTH, HEIGHT))
         self.background = numpy.transpose(self.background, (1, 0, 2))
         self.background_original = numpy.array(self.background)
@@ -44,16 +44,16 @@ class Gui():
         self.screen.fill((0, 0, 0))
         self.screen.blit(pygame.surfarray.make_surface(self.background), (0, 0))
 
-        self.fatals = [7, 5, 9, 5, 1]
-        self.rescue_resources = [5, 2, 3, 4, 1]
-        self.victim_needs = [2, 4, 5, 3, 1]
+        self.fatals = fatals
+        self.rescue_resources = rescue_resources
+        self.victim_needs = victim_needs
 
         # Rescue teams and victims position
-        self.res = []
-        self.vic = []
+        self.res = rescue_position
+        self.vic = victim_position
 
         # Resulting path    
-        self.paths = []
+        self.paths = [None for i in self.res]
 
         # Time controller
         self.time_unit = 0;
@@ -94,6 +94,8 @@ class Gui():
                         if index < len(self.paths[single_res_index]):
                             self.res[single_res_index] = list(self.paths[single_res_index][index])
                         else:
+                            
+                            #print(self.res, self.vic, self.fatals, self.rescue_resources, self.victim_needs)
                             single_vic_index = self.vic.index(self.res[single_res_index])
 
                             if self.victim_needs[single_vic_index] > self.rescue_resources[single_res_index]:
@@ -111,7 +113,7 @@ class Gui():
                                 del self.fatals[single_vic_index]
                                 del self.rescue_resources[single_res_index]
                                 del self.victim_needs[single_vic_index]
-
+                            #print(self.res, self.vic, self.fatals, self.rescue_resources, self.victim_needs)
                             queue.put([True, 
                                 numpy.array(self.background),
                                 self.res,
@@ -132,11 +134,11 @@ class Gui():
                 if key == 'q':
                     pygame.quit()
                     sys.exit()
-                if key == 's':
-                    self.res.append([mouse_x, mouse_y]);
-                    self.paths.append(None)
-                if key == 'e':
-                    self.vic.append([mouse_x, mouse_y])
+                # if key == 's':
+                #     self.res.append([mouse_x, mouse_y]);
+                #     self.paths.append(None)
+                # if key == 'e':
+                #     self.vic.append([mouse_x, mouse_y])
                 if key == 'r':
                     queue.put([True, 
                             numpy.array(self.background),
@@ -149,13 +151,13 @@ class Gui():
                     self.start_draw_time = -1
         pygame.display.update()
 
-def main_loop(queue):
+def main_loop(queue, image_link, victim_position, fatals, victim_needs, rescue_position, rescue_resources):
     pygame.init()
 
     algo_thres = Process(target=algo, args=(queue, ), daemon=True);
     algo_thres.start()
     
-    gui = Gui()
+    gui = Gui(image_link, victim_position, fatals, victim_needs, rescue_position, rescue_resources)
     
     while True:
         #print("->")
@@ -186,7 +188,7 @@ def algo(queue):
 
         if len(receiver) == 7:
             is_running_algo, background, res, vic, fatals, rescue_resources, victim_needs = receiver
-            print(res, vic, fatals, rescue_resources, victim_needs)
+            #print(res, vic, fatals, rescue_resources, victim_needs)
         else:
             queue.put(receiver)
             continue
@@ -199,7 +201,7 @@ def algo(queue):
             #print(groundMapModel)
             groundMapModel = helper.turn_image_to_binary(groundMapModel, 1)
             # #print(groundMapModel)
-            print("start")
+            #print("start")
             res = numpy.array(res);
             vic = numpy.array(vic);
 
@@ -209,12 +211,25 @@ def algo(queue):
             #print(res.shape, vic.shape)
 
             paths = helper.solve_for_paths(groundMapModel, res, vic, fatals, rescue_resources, victim_needs);
-            print("end")
+            #print("end")
             queue.put([False, paths])
             is_running_algo = False
-            print("ye")
+            #print("ye")
 
-if __name__ == "__main__": 
+def run(image_link, victim_position, fatals, victim_needs, rescue_position, rescue_resources):
+    """
+        Run finding path algorithm
+        Args:
+            image_link: Link to the background image
+            victim_position: Position of victims, data type: 2d list, shape (number of victims, position)
+            fatals: Measure how bad the victim get injured, data type: 1d list, shape (number of victims)
+            victim_needs: Measure how many rescue resources the victim need, data type: 1d list, shape (number of victims)
+            rescue_position: Position of rescue teams, data type: 2d list, shape (number of rescue teams, position)
+            rescue_resources: Measure how many rescue resources the rescue team have, data type: 1d list, shape (number of rescue teams)
+    """
     queue = Queue()
-    main_loop_thread = Process(target=main_loop, args=(queue, ));
+    main_loop_thread = Process(target=main_loop, args=(queue, image_link, victim_position, fatals, victim_needs, rescue_position, rescue_resources));
     main_loop_thread.start()
+
+if __name__ == '__main__':
+    run("test.jpg", [[20, 20], [60, 60]], [7, 1], [5, 9], [[100, 50], [100, 100]], [4, 6])
