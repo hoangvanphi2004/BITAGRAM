@@ -68,7 +68,7 @@ class Gui():
         self.start_draw_time = -1;
         self.start_draw_return_time = -1;
         self.stop_process = False
-
+        self.stop_process_return = False
     def draw_box(self, box, colour, thickness):
         boxX, boxY = box
         pygame.draw.rect(self.screen, colour, (boxX - thickness, boxY - thickness, thickness * 2, thickness * 2));
@@ -107,15 +107,13 @@ class Gui():
         self.draw_paths()   
         self.draw_res_vic();
         mouse_x, mouse_y = pygame.mouse.get_pos()
-        if time.time() - self.start_time_window > self.time_window:
+        if time.time() - self.start_time_window > self.time_window and self.stop_process == False and self.stop_process_return == False:
             self.time_unit = self.time_unit + 1;
             self.start_time_window = time.time()
 
-            if not self.start_draw_time == -1 and self.stop_process == False:
-                index = self.time_unit - self.start_draw_time
-                if not self.start_draw_return_time == -1:
+            if not self.start_draw_return_time == -1:
+                if self.stop_process_return == False:
                     return_index = self.time_unit - self.start_draw_return_time
-                    #print(index)
 
                     for single_return_res_index in range(len(self.return_res)):
                         if self.return_res_paths[single_return_res_index] is not None:
@@ -141,8 +139,10 @@ class Gui():
                                 self.start_draw_time = -1
                                 self.stop_process = True
                                 break;
-                
+
+            if not self.start_draw_time == -1:
                 if self.stop_process == False:
+                    index = self.time_unit - self.start_draw_time
                     for single_res_index in range(len(self.res)):
                         if self.paths[single_res_index] is not None: 
                             if index < len(self.paths[single_res_index]):
@@ -170,7 +170,7 @@ class Gui():
                                     ])
                                     print(self.return_res, self.assembly_area)
                                     self.start_draw_return_time = -1;
-                                    self.stop_process = True
+                                    self.stop_process_return = True
 
                                 # Del victim
                                 elif self.victim_needs[single_vic_index] < self.rescue_resources[single_res_index]:
@@ -198,7 +198,7 @@ class Gui():
 
                                     print(self.return_res, self.assembly_area)
                                     self.start_draw_return_time = -1;
-                                    self.stop_process = True
+                                    self.stop_process_return = True
 
                                 #print(self.res, self.vic, self.fatals, self.rescue_resources, self.victim_needs)
                                 queue.put([True, 
@@ -268,11 +268,13 @@ def main_loop(queue, image_link, victim_position, fatals, victim_needs, rescue_p
             gui.paths = paths
             gui.start_draw_time = gui.time_unit
             gui.stop_process = False
+            gui.start_time_window = time.time()
         elif len(receiver) == 3:
             return_res_paths = receiver[1]
             gui.return_res_paths = return_res_paths
             gui.start_draw_return_time = gui.time_unit
-            gui.stop_process = False
+            gui.stop_process_return = False
+            gui.start_time_window = time.time()
         gui.main(queue)
     
 def algo(queue):
