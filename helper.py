@@ -373,7 +373,7 @@ def solve_for_path_with_BFS(image, rescue_pos, victim_pos, fatals, rescue_resour
                 if total_resource_for_the_victim > victim_need:
                     break;
 
-    return rescue_paths
+    return rescue_paths, paths_matrix
 
 def solve_for_paths(image, rescue_pos, victim_pos, fatals, rescue_resources, victim_needs, algorithm = "theta_aristek"):
     rescue_pos = [tuple(single_rescue_pos) for single_rescue_pos in rescue_pos]
@@ -389,8 +389,6 @@ def solve_for_paths(image, rescue_pos, victim_pos, fatals, rescue_resources, vic
                 costs_matrix[i, j], paths_matrix[i][j], _ = theta_aristek(image, rescue_pos[i], victim_pos[j], L1)
             else:
                 costs_matrix[i, j], paths_matrix[i][j], _ = a_aristek(image, rescue_pos[i], victim_pos[j], L1)
-
-            print(i, j, costs_matrix[i, j])
 
     #print(costs_matrix, paths_matrix)
     rescue_remain = [True for i in range(num_of_rescue_teams)]
@@ -412,7 +410,7 @@ def solve_for_paths(image, rescue_pos, victim_pos, fatals, rescue_resources, vic
                 if total_resource_for_the_victim > victim_need:
                     break;
 
-    return rescue_paths
+    return rescue_paths, paths_matrix
 
 def paths_for_return(image, rescue_pos, assembly_area):
     rescue_pos = [tuple(single_rescue_pos) for single_rescue_pos in rescue_pos]

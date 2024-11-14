@@ -316,7 +316,7 @@ def algo(queue):
                 #print(res.shape, vic.shape)
 
                 time1 = time.time()
-                paths = helper.solve_for_paths(groundMapModel, res, vic, fatals, rescue_resources, victim_needs);
+                paths, _ = helper.solve_for_paths(groundMapModel, res, vic, fatals, rescue_resources, victim_needs);
                 time2 = time.time()
                 print(time2 - time1)
                 print("end")
