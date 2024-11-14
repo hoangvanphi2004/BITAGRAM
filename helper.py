@@ -1,4 +1,3 @@
-import pygame
 import random
 import numpy as np
 from PIL import Image
@@ -263,7 +262,7 @@ def buildMap(image):
   # Save or display the final black and white map
   return groundMapModel
 
-def solve_for_paths(image, rescue_pos, victim_pos, fatals, rescue_resources, victim_needs):
+def solve_for_paths(image, rescue_pos, victim_pos, fatals, rescue_resources, victim_needs, algorithm = "theta_aristek"):
     rescue_pos = [tuple(single_rescue_pos) for single_rescue_pos in rescue_pos]
     victim_pos = [tuple(single_victim_pos) for single_victim_pos in victim_pos]
     num_of_rescue_teams = len(rescue_pos);
@@ -273,8 +272,10 @@ def solve_for_paths(image, rescue_pos, victim_pos, fatals, rescue_resources, vic
 
     for i in range(len(rescue_pos)):
         for j in range(len(victim_pos)):
-            #costs_matrix[i, j], paths_matrix[i][j], _ = a_aristek(image, rescue_pos[i], victim_pos[j], L1)
-            costs_matrix[i, j], paths_matrix[i][j], _ = theta_aristek(image, rescue_pos[i], victim_pos[j], L1)
+            if algorithm == "theta_aristek":
+                costs_matrix[i, j], paths_matrix[i][j], _ = theta_aristek(image, rescue_pos[i], victim_pos[j], L1)
+            else:
+                costs_matrix[i, j], paths_matrix[i][j], _ = a_aristek(image, rescue_pos[i], victim_pos[j], L1)
 
     #print(costs_matrix, paths_matrix)
     rescue_remain = [True for i in range(num_of_rescue_teams)]

@@ -222,11 +222,11 @@ class Gui():
                 if key == 'q':
                     pygame.quit()
                     sys.exit()
-                # if key == 's':
-                #     self.res.append([mouse_x, mouse_y]);
-                #     self.paths.append(None)
-                # if key == 'e':
-                #     self.vic.append([mouse_x, mouse_y])
+                if key == 's':
+                    self.res.append([mouse_x, mouse_y]);
+                    self.paths.append(None)
+                if key == 'e':
+                    self.vic.append([mouse_x, mouse_y])
                 if key == 'r':
                     queue.put([True, 
                             numpy.array(self.background),
@@ -309,12 +309,15 @@ def algo(queue):
                 res = numpy.array(res);
                 vic = numpy.array(vic);
 
-                print(res, vic)
                 # res = numpy.concatenate([res[:, 1:], res[:, :1]], axis = 1).tolist();
                 # vic = numpy.concatenate([vic[:, 1:], vic[:, :1]], axis = 1).tolist();
                 #print(res.shape, vic.shape)
 
+                time1 = time.time()
                 paths = helper.solve_for_paths(groundMapModel, res, vic, fatals, rescue_resources, victim_needs);
+                time2 = time.time()
+                print(time2 - time1
+                      )
                 print("end")
                 queue.put([False, paths])
             if len(receiver) == 4:
@@ -346,4 +349,10 @@ def run(image_link, victim_position, fatals, victim_needs, rescue_position, resc
     main_loop_thread.start()
 
 if __name__ == '__main__':
-    run("test.jpg", [[20, 20], [60, 60]], [7, 1], [4, 6], [[100, 50], [400, 400]], [2, 2], [400, 20])
+    # fatals = [7, 5, 9, 5, 1]
+    # rescue_resources = [5, 2, 3, 4, 1]
+    # victim_needs = [2, 4, 5, 3, 1]
+    # is_running_algo = False
+    #run("test.jpg", [[20, 20], [60, 60]], [7, 1], [4, 6], [[100, 50], [400, 400]], [2, 2], [400, 20])
+    run("test.jpg", [], [7, 5, 9, 5, 1], [2, 4, 5, 3, 1], [], [5, 2, 3, 4, 1], [400, 20])
+
