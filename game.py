@@ -224,9 +224,11 @@ class Gui():
                     sys.exit()
                 if key == 's':
                     self.res.append([mouse_x, mouse_y]);
+                    #print(mouse_x, mouse_y)
                     self.paths.append(None)
                 if key == 'e':
                     self.vic.append([mouse_x, mouse_y])
+                    print(mouse_x, mouse_y)
                 if key == 'r':
                     queue.put([True, 
                             numpy.array(self.background),
@@ -314,10 +316,9 @@ def algo(queue):
                 #print(res.shape, vic.shape)
 
                 time1 = time.time()
-                paths = helper.solve_for_path_with_BFS(groundMapModel, res, vic, fatals, rescue_resources, victim_needs);
+                paths = helper.solve_for_paths(groundMapModel, res, vic, fatals, rescue_resources, victim_needs);
                 time2 = time.time()
-                print(time2 - time1
-                      )
+                print(time2 - time1)
                 print("end")
                 queue.put([False, paths])
             if len(receiver) == 4:
@@ -354,5 +355,5 @@ if __name__ == '__main__':
     # victim_needs = [2, 4, 5, 3, 1]
     # is_running_algo = False
     #run("test.jpg", [[20, 20], [60, 60]], [7, 1], [4, 6], [[100, 50], [400, 400]], [2, 2], [400, 20])
-    run("test.jpg", [], [7, 5, 9], [2, 4, 5], [], [5, 2], [500, 20])
+    run("test.jpg", [], [7, 5, 9, 5, 1], [2, 4, 5, 3, 1], [], [5, 2, 3, 4, 1], [400, 20])
 

@@ -136,7 +136,7 @@ def a_aristek(image, start, finish, heuristic_func):
 
     path = []
     if recent != finish:
-        return -1, [], visited
+        return 1e9, [], visited
 
     ### Trace Back ###
     while(recent != start):
@@ -206,7 +206,7 @@ def theta_aristek(image, start, finish, heuristic):
                 if valid_move(neighbor):
                     if visited[neighbor] == False:
                         update_vertex(s, neighbor, goal)
-        return -1, None
+        return 1e9, None
                 
         
     def update_vertex(s, neighbor, goal):
@@ -292,15 +292,17 @@ def theta_aristek(image, start, finish, heuristic):
             return draw_bigger((p1[0], p2[0]), (p1[1], p2[1]), swap = False);
         else:
             return draw_bigger((p1[1], p2[1]), (p1[0], p2[0]), swap = True);
-            
-    for index in range(len(path) - 1):
-        pre_point = path[index]
-        nex_point = path[index + 1]
-        # print("!!!")
-        # print(pre_point, nex_point)
-        # print(line(pre_point, nex_point))
-        real_paths = real_paths + line(pre_point, nex_point)
-    real_paths.append(path[len(path) - 1])
+    if path != None:        
+        for index in range(len(path) - 1):
+            pre_point = path[index]
+            nex_point = path[index + 1]
+            # print("!!!")
+            # print(pre_point, nex_point)
+            # print(line(pre_point, nex_point))
+            real_paths = real_paths + line(pre_point, nex_point)
+        real_paths.append(path[len(path) - 1])
+    else:
+        real_paths = None
     return cost, real_paths, None
 
 def buildMap(image):
@@ -387,6 +389,8 @@ def solve_for_paths(image, rescue_pos, victim_pos, fatals, rescue_resources, vic
                 costs_matrix[i, j], paths_matrix[i][j], _ = theta_aristek(image, rescue_pos[i], victim_pos[j], L1)
             else:
                 costs_matrix[i, j], paths_matrix[i][j], _ = a_aristek(image, rescue_pos[i], victim_pos[j], L1)
+
+            print(i, j, costs_matrix[i, j])
 
     #print(costs_matrix, paths_matrix)
     rescue_remain = [True for i in range(num_of_rescue_teams)]
