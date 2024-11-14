@@ -21,6 +21,67 @@ def L1(p1, p2):
 
 WALL = 0;
 
+def BFS(image, start):
+    """
+        image: (W, H) (row, col)
+        start: (x, y)
+        finish: (x, y)
+    """
+    image = np.array(image);  
+
+    recent = start
+    recent_cost = 0
+    potential_nodes = []
+    previous_move = [[None for i in range(image.shape[1])] for i in range(image.shape[0])]
+    cost_matrix = [[1e9 for i in range(image.shape[1])] for i in range(image.shape[0])]
+    visited = np.full(image.shape, False)
+
+    def valid_move(position):
+        for i in range(2):
+            if position[i] >= image.shape[i] or position[i] < 0:
+                return False;
+
+        if image[position] == WALL or visited[position] == True:
+            return False;
+        return True
+
+    ### BFS algorithm ###
+    visited[start] = True
+    heapq.heappush(potential_nodes, (0, recent));
+    while(len(potential_nodes) != 0):
+        recent_cost, recent = heapq.heappop(potential_nodes)
+        cost_matrix[recent[0]][recent[1]] = min(cost_matrix[recent[0]][recent[1]], recent_cost)
+
+        next_moves = [(recent[0] - 1 + i, recent[1] - 1 + j) for i in range(3) for j in range(3) if (i != 1 or j != 1)]
+
+        #print(next_moves)
+        #break;
+
+        # next_moves = [
+        #     (recent[0], recent[1] + 1),
+        #     (recent[0] + 1, recent[1]),
+        #     (recent[0], recent[1] - 1),
+        #     (recent[0] - 1, recent[1])
+        # ]
+
+        for next_move in next_moves:
+            if valid_move(next_move):
+                if recent[0] != next_move[0] and recent[1] != next_move[1]:
+                    if image[next_move[0], recent[1]] == WALL or image[recent[0], next_move[1]] == WALL:
+                        continue
+                move_cost = (np.sqrt(2) if recent[0] != next_move[0] and recent[1] != next_move[1] else 1)
+                heapq.heappush(potential_nodes, (recent_cost + move_cost, next_move))
+                previous_move[next_move[0]][next_move[1]] = recent;
+                visited[next_move] = True
+
+    # ### Trace Back ###
+    # while(recent != start):
+    #     path = [recent] + path;
+    #     recent = previous_move[recent[0]][recent[1]]
+    # path = [recent] + path
+
+    return cost_matrix, previous_move;
+
 def a_aristek(image, start, finish, heuristic_func):
     """
         image: (W, H) (row, col)
@@ -33,7 +94,7 @@ def a_aristek(image, start, finish, heuristic_func):
     recent_cost = 0
     potential_nodes = []
     previous_move = [[None for i in range(image.shape[1])] for i in range(image.shape[0])]
-    print(image.shape)
+    #print(image.shape)
     visited = np.full(image.shape, False)
 
     def valid_move(position):
@@ -261,6 +322,56 @@ def buildMap(image):
   groundMapModel = cv2.bitwise_not(morph_image)
   # Save or display the final black and white map
   return groundMapModel
+
+def solve_for_path_with_BFS(image, rescue_pos, victim_pos, fatals, rescue_resources, victim_needs):
+    rescue_pos = [tuple(single_rescue_pos) for single_rescue_pos in rescue_pos]
+    victim_pos = [tuple(single_victim_pos) for single_victim_pos in victim_pos]
+    num_of_rescue_teams = len(rescue_pos);
+    num_of_victims = len(victim_pos)
+    costs_matrix = np.zeros((num_of_rescue_teams, num_of_victims))
+    paths_matrix = [[None for i in range(num_of_victims)] for i in range(num_of_rescue_teams)]
+
+    def trace_back(recent, start, previous_move):
+        ### Trace Back ###
+        path = []
+        while(recent != start):
+            path = [recent] + path;
+            recent = previous_move[recent[0]][recent[1]]
+        path = [recent] + path
+        
+        return path
+    
+    for i in range(len(rescue_pos)):
+        costs_matrix_of_rescure_team, previous_move = BFS(image, rescue_pos[i])
+        for j in range(len(victim_pos)):
+            costs_matrix[i, j] = costs_matrix_of_rescure_team[victim_pos[j][0]][victim_pos[j][1]]
+            paths_matrix[i][j] = trace_back(victim_pos[j], rescue_pos[i], previous_move)
+            # if algorithm == "theta_aristek":
+            #     costs_matrix[i, j], paths_matrix[i][j], _ = theta_aristek(image, rescue_pos[i], victim_pos[j], L1)
+            # else:
+            #     costs_matrix[i, j], paths_matrix[i][j], _ = a_aristek(image, rescue_pos[i], victim_pos[j], L1)
+
+    #print(costs_matrix, paths_matrix)
+    rescue_remain = [True for i in range(num_of_rescue_teams)]
+    rescue_paths = [None for i in range(num_of_rescue_teams)]
+    rescue_order = np.argsort(fatals)[::-1]
+    for victim_index in rescue_order:
+        victim_need = victim_needs[victim_index]
+        rescue_cost_order = np.argsort(costs_matrix[:, victim_index].tolist());
+
+        total_resource_for_the_victim = 0;
+        for rescue_index in rescue_cost_order:
+            if rescue_remain[rescue_index] == True:
+                rescue_remain[rescue_index] = False
+                rescue_resource = rescue_resources[rescue_index]
+
+                rescue_paths[rescue_index] = paths_matrix[rescue_index][victim_index]
+
+                total_resource_for_the_victim += rescue_resource
+                if total_resource_for_the_victim > victim_need:
+                    break;
+
+    return rescue_paths
 
 def solve_for_paths(image, rescue_pos, victim_pos, fatals, rescue_resources, victim_needs, algorithm = "theta_aristek"):
     rescue_pos = [tuple(single_rescue_pos) for single_rescue_pos in rescue_pos]

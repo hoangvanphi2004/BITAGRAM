@@ -314,7 +314,7 @@ def algo(queue):
                 #print(res.shape, vic.shape)
 
                 time1 = time.time()
-                paths = helper.solve_for_paths(groundMapModel, res, vic, fatals, rescue_resources, victim_needs);
+                paths = helper.solve_for_path_with_BFS(groundMapModel, res, vic, fatals, rescue_resources, victim_needs);
                 time2 = time.time()
                 print(time2 - time1
                       )
@@ -354,5 +354,5 @@ if __name__ == '__main__':
     # victim_needs = [2, 4, 5, 3, 1]
     # is_running_algo = False
     #run("test.jpg", [[20, 20], [60, 60]], [7, 1], [4, 6], [[100, 50], [400, 400]], [2, 2], [400, 20])
-    run("test.jpg", [], [7, 5, 9, 5, 1], [2, 4, 5, 3, 1], [], [5, 2, 3, 4, 1], [400, 20])
+    run("test.jpg", [], [7, 5, 9], [2, 4, 5], [], [5, 2], [500, 20])
 
