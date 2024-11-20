@@ -80,7 +80,7 @@ def BFS(image, start):
     #     recent = previous_move[recent[0]][recent[1]]
     # path = [recent] + path
 
-    return cost_matrix, previous_move;
+    return cost_matrix, previous_move, visited;
 
 def a_aristek(image, start, finish, heuristic_func):
     """
@@ -344,7 +344,7 @@ def solve_for_path_with_BFS(image, rescue_pos, victim_pos, fatals, rescue_resour
         return path
     
     for i in range(len(rescue_pos)):
-        costs_matrix_of_rescure_team, previous_move = BFS(image, rescue_pos[i])
+        costs_matrix_of_rescure_team, previous_move, _ = BFS(image, rescue_pos[i])
         for j in range(len(victim_pos)):
             costs_matrix[i, j] = costs_matrix_of_rescure_team[victim_pos[j][0]][victim_pos[j][1]]
             paths_matrix[i][j] = trace_back(victim_pos[j], rescue_pos[i], previous_move)
@@ -373,7 +373,7 @@ def solve_for_path_with_BFS(image, rescue_pos, victim_pos, fatals, rescue_resour
                 if total_resource_for_the_victim > victim_need:
                     break;
 
-    return rescue_paths, paths_matrix
+    return rescue_paths, costs_matrix
 
 def solve_for_paths(image, rescue_pos, victim_pos, fatals, rescue_resources, victim_needs, algorithm = "theta_aristek"):
     rescue_pos = [tuple(single_rescue_pos) for single_rescue_pos in rescue_pos]
@@ -389,6 +389,7 @@ def solve_for_paths(image, rescue_pos, victim_pos, fatals, rescue_resources, vic
                 costs_matrix[i, j], paths_matrix[i][j], _ = theta_aristek(image, rescue_pos[i], victim_pos[j], L1)
             else:
                 costs_matrix[i, j], paths_matrix[i][j], _ = a_aristek(image, rescue_pos[i], victim_pos[j], L1)
+            #print(i, j, costs_matrix[i, j])
 
     #print(costs_matrix, paths_matrix)
     rescue_remain = [True for i in range(num_of_rescue_teams)]
@@ -410,7 +411,7 @@ def solve_for_paths(image, rescue_pos, victim_pos, fatals, rescue_resources, vic
                 if total_resource_for_the_victim > victim_need:
                     break;
 
-    return rescue_paths, paths_matrix
+    return rescue_paths, costs_matrix
 
 def paths_for_return(image, rescue_pos, assembly_area):
     rescue_pos = [tuple(single_rescue_pos) for single_rescue_pos in rescue_pos]

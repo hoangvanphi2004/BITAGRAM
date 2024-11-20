@@ -64,11 +64,12 @@ class Gui():
         # Time controller
         self.time_unit = 0;
         self.start_time_window = time.time();
-        self.time_window = 0.05;
+        self.time_window = 0.02;
         self.start_draw_time = -1;
         self.start_draw_return_time = -1;
         self.stop_process = False
         self.stop_process_return = False
+        self.start = True
     def draw_box(self, box, colour, thickness):
         boxX, boxY = box
         pygame.draw.rect(self.screen, colour, (boxX - thickness, boxY - thickness, thickness * 2, thickness * 2));
@@ -101,7 +102,7 @@ class Gui():
             self.draw_text([single_res[0], single_res[1]], f"rescue resources: {self.rescue_resources[index_single_res]}")
         for index_single_return_res, single_return_res in enumerate(self.return_res):
             self.draw_box([single_return_res[0], single_return_res[1]], colour = (0, 255, 0), thickness = 5)
-
+            
     def main(self, queue):
         self.screen.blit(pygame.surfarray.make_surface(self.background), (0, 0))
         self.draw_paths()   
@@ -239,6 +240,17 @@ class Gui():
                             self.victim_needs
                                ])
                     self.start_draw_time = -1
+        if self.start == True:
+            queue.put([True, 
+                    numpy.array(self.background),
+                    self.res,
+                    self.vic,
+                    self.fatals,
+                    self.rescue_resources,
+                    self.victim_needs
+                        ])
+            self.start_draw_time = -1
+            self.start = False
         pygame.display.update()
 
 def main_loop(queue, image_link, victim_position, fatals, victim_needs, rescue_position, rescue_resources, assembly_area):
@@ -354,6 +366,6 @@ if __name__ == '__main__':
     # rescue_resources = [5, 2, 3, 4, 1]
     # victim_needs = [2, 4, 5, 3, 1]
     # is_running_algo = False
-    #run("test.jpg", [[20, 20], [60, 60]], [7, 1], [4, 6], [[100, 50], [400, 400]], [2, 2], [400, 20])
-    run("test.jpg", [], [7, 5, 9, 5, 1], [2, 4, 5, 3, 1], [], [5, 2, 3, 4, 1], [400, 20])
+    run("test.jpg", [[20, 20], [60, 60]], [7, 1], [4, 6], [[100, 50], [400, 400]], [2, 2], [400, 20])
+    #run("test.jpg", [], [7, 5, 9], [2, 4, 5], [], [5, 2], [505, 20])
 
